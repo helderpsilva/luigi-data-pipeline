@@ -25,8 +25,8 @@ ENGINE = create_engine(f"sqlite:///{DATABASEDIR}")
 # Tasks are defined using Classes (eg. Task GetData)
 # The following methods can be used.
 #   1. requires - defines the task dependencies.
-#   2. run - the main code for the task
-#   3. output - defines the output for the task (used in checking for completion)
+#   2. run - the main code for the task.
+#   3. output - defines the output for the task (used in checking for completion).
 #   4. Other. (see documentation)
 
 # :::::::::::::::: DATA PIPELINE ::::::::::::::::
@@ -49,7 +49,7 @@ class GetData(luigi.Task):
         data = json_normalize(response.json())
         data.to_csv(self.output().path, index=False)
 
-    # The output is stored in 'data/extract/covid.csv'
+    # The output is stored in 'data/extract/covid.csv'.
     def output(self):
         return luigi.LocalTarget(os.path.join(DATADIR, "extract", "covid.csv"))
 
@@ -84,7 +84,7 @@ class CleanData(luigi.Task):
             .to_csv(self.output().path, index=False)
         )
 
-    # The output is stored in 'data/transform/covid.csv'
+    # The output is stored in 'data/transform/covid.csv'.
     def output(self):
         return luigi.LocalTarget(os.path.join(DATADIR, "transform", "covid.csv"))
 
