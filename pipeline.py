@@ -1,24 +1,17 @@
 # :::::::::::::::: IMPORT PACKAGES :::::::::::::::
 
 import pandas as pd
-import requests
 import luigi
 import os
 
-from pandas import json_normalize
-from sqlalchemy import create_engine
+# Custom imports.
+from src.database import engine
+from src.api import get_api_data
 
-# :::::::::::: DEFINE GLOBAL VARIABLES :::::::::::
+# :::::::::::: GLOBAL VARIABLES :::::::::::
 
-# Get current directory.
-BASEDIR = os.getcwd()
-
-# Define Data directory and Database directory.
-DATADIR = os.path.join(BASEDIR, "data")
-DATABASEDIR = os.path.join(DATADIR, "covid.db")
-
-# Define DB Engine.
-ENGINE = create_engine(f"sqlite:///{DATABASEDIR}")
+BASEDIR = os.getcwd()  # Get current directory.
+DATADIR = os.path.join(BASEDIR, "data")  # Define Data directory.
 
 # :::::::::::: THE LUIGI FRAMEWORK ::::::::::::::
 
@@ -33,20 +26,15 @@ ENGINE = create_engine(f"sqlite:///{DATABASEDIR}")
 
 
 class GetData(luigi.Task):
-    """Get data from COVID-19 public API"""
+    """
+    Get data from COVID-19 public API
+    """
 
     # Gets data from COVID19 API.
     def run(self):
-        headers = {
-            "accept": "application/json",
-        }
-
-        response = requests.get(
-            "https://covid19-api.vost.pt/Requests/get_full_dataset_counties",
-            headers=headers,
+        data = get_api_data(
+            "https://covid19-api.vost.pt/Requests/get_full_dataset_counties"
         )
-
-        data = json_normalize(response.json())
         data.to_csv(self.output().path, index=False)
 
     # The output is stored in 'data/extract/covid.csv'.
@@ -58,7 +46,9 @@ class GetData(luigi.Task):
 
 
 class CleanData(luigi.Task):
-    """Data Cleaning"""
+    """
+    Data Cleaning
+    """
 
     # Requires data from previous step.
     def requires(self):
@@ -90,7 +80,9 @@ class CleanData(luigi.Task):
 
 
 class SendToDatabase(luigi.Task):
-    """Updates information on the Database"""
+    """
+    Updates information on the Database
+    """
 
     _complete = False
 
@@ -102,7 +94,7 @@ class SendToDatabase(luigi.Task):
     def run(self):
         data = pd.read_csv(CleanData().output().path)
 
-        (data.to_sql("covid", con=ENGINE, if_exists="replace"))
+        (data.to_sql("covid", con=engine, if_exists="replace"))
 
         self._complete = True
 
